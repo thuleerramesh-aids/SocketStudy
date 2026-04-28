@@ -53,6 +53,106 @@ Socket programming finds applications in various domains, including web developm
 4.	Networked Games: Online multiplayer games rely on socket programming to facilitate communication between game clients and servers.
 5.	RPC mechanisms: which allow processes to execute code on a remote server, often use socket programming for communication.
 
+##Input:
+~~~
+import socket
+import threading
+import time
+
+HOST = "127.0.0.1"
+PORT = 5002   # Use a new port number
+
+
+# Server function
+def server():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Allow address reuse
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    s.bind((HOST, PORT))
+    s.listen(1)
+
+    print("Server is waiting for connection...")
+
+    conn, addr = s.accept()
+    print("Connected by:", addr)
+
+    count = 0  # Communication counter
+
+    while count < 3:
+        data = conn.recv(1024).decode()
+
+        if not data:
+            print("Client disconnected.")
+            break
+
+        print("Client says:", data)
+
+        # Server reply
+        reply = input("Server reply: ")
+        conn.send(reply.encode())
+
+        count += 1
+
+    # After 3 communications
+    print("Server is end.")
+    conn.send("Server is end.".encode())
+
+    conn.close()
+    s.close()
+
+
+# Client function
+def client():
+    time.sleep(2)  # Increased wait time for server startup
+
+    c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Retry connection until server is ready
+    while True:
+        try:
+            c.connect((HOST, PORT))
+            print("Client connected to server.")
+            break
+        except ConnectionRefusedError:
+            print("Waiting for server...")
+            time.sleep(1)
+
+    while True:
+        message = input("Client message: ")
+        c.send(message.encode())
+
+        response = c.recv(1024).decode()
+
+        if response.lower() == "server is end.":
+            print(response)
+            break
+
+        print("Server says:", response)
+
+    c.close()
+
+
+# Create threads
+server_thread = threading.Thread(target=server)
+client_thread = threading.Thread(target=client)
+
+# Start threads
+server_thread.start()
+client_thread.start()
+
+# Wait for both threads
+server_thread.join()
+client_thread.join()
+
+print("Chat closed successfully.")
+~~~
+
+##Output:
+
+<img width="1920" height="1080" alt="Screenshot (228)" src="https://github.com/user-attachments/assets/88338e64-1cd0-4b99-9f71-79b233618759" />
+
 
 ## Result:
 Thus the study of Socket Programming Completed Successfully
